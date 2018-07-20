@@ -1,0 +1,81 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/TweenMax.min.js"></script>
+    <script type='text/javascript' src="../../../resources/js/iframeResizer.contentWindow.js"></script>
+    <script type='text/javascript' src="../../../resources/js/ScrollMagic.min.js"></script>
+    <script type='text/javascript' src="../../../resources/js/animation.gsap.min.js"></script>
+    <script type='text/javascript' src="../../../resources/js/debug.addIndicators.min.js"></script>
+    <script type='text/javascript' src='../../../resources/js/jquery-3.2.1.min.js'></script>
+    <link rel="stylesheet" type="text/css" media="all" href="../../css/tachyons.css"/>
+    <script>
+    var controller = new ScrollMagic.Controller();
+    </script>
+    <style>
+      .space {
+        margin-top: 1200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="w-100 mw7 center space overflow-hidden" id="container">
+      <img src="atom-left-01.svg" class="absolute w-100 center mw7 z-1" id="atom-left">
+      <img src="atom-right-01.svg" class="absolute w-100 center mw7 z-1" id="atom-right">
+      <div class="w-50 relative fl overflow-hidden ma0">
+        <img src="bubble-left-01-02.svg" class="relative w-100" id="bubble-left">
+      </div>
+      <div class="w-50 relative fr overflow-hidden">
+        <img src="bubble-right-01-03.svg" class="relative w-100" id="bubble-right">
+      </div>
+    </div>
+    <div class="h1 w-100 space"></div>
+    <div class="h1 w-100 space"></div>
+
+    <script>
+
+      function getWidth() {
+        return $('#container').outerWidth();
+      }
+
+      function once(fn, context) {
+        //
+        // from https://davidwalsh.name/javascript-once
+        //
+      	var result;
+
+      	return function() {
+      		if(fn) {
+      			result = fn.apply(context || this, arguments);
+      			fn = null;
+      		}
+
+      		return result;
+      	};
+      }
+
+      var controller = new ScrollMagic.Controller();
+
+      TweenMax.defaultEase = Power2.easeInOut
+      TweenMax.set("#bubble-left", {x:getWidth()/2 - getWidth()/30})
+      TweenMax.set("#bubble-right", {x:-(getWidth()/2 - getWidth()/30)})
+
+      var animateTween = once(function() {
+        var ease = "Power2.easeInOut";
+        var tl = new TimelineMax();
+        tl.to("#bubble-left", 2, {x: getWidth()/6, ease: ease});
+        tl.to("#bubble-right", 2, {x: -getWidth()/6, ease: ease}, 0);
+        tl.to("#atom-left", 2, {x: -(getWidth()/4 + getWidth()/20), ease: ease}, 0);
+        tl.to("#atom-right", 2, {x: getWidth()/4 + getWidth()/20, ease: ease}, 0);
+      });
+
+      // build scene
+      var scene = new ScrollMagic.Scene({
+                triggerElement: "#container"
+              })
+              .on('start', function () {
+                animateTween();
+              })
+              .addIndicators()
+              .addTo(controller);
+
+    </script>
+  </body>

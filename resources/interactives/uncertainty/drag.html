@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/TweenMax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/utils/Draggable.min.js"></script>
+    <script type='text/javascript' src="../../../resources/js/iframeResizer.contentWindow.js"></script>
+    <link rel="stylesheet" type="text/css" media="all" href="../../../resources/css/tachyons.css"/>
+    <style>
+      .message {
+        font-size: 1.5rem;
+        letter-spacing: 1rem;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-right: -50%;
+        transform: translate(-54%, -50%);
+        transition: opacity 1s;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="w-90 mw7 center mt2 sans-serif dark-gray">
+      <div class="w-50 center pb2">
+      <h2 class="tc pb1">Uncertainty</h2>
+        <div class="relative mt4" id="container">
+          <img class="absolute" id="circle" src="images/circle-03.svg">
+          <img class="absolute" style="width: 10px;" id="handle-top" src="images/handle-06.svg">
+          <img class="absolute" style="width: 10px;" id="handle-right" src="images/handle-06.svg">
+          <img class="relative" style="z-index: -1;" id="graph" src="images/graph-03.svg" id="">
+        </div>
+      </div>
+      <div class="relative w-50 fl">
+        <h2 class="tc mb1">Speedometer</h2>
+        <img class="absolute" src="images/speedometer-01.svg">
+        <img class="absolute" id="arrow" src="images/arrow-01.svg">
+      </div>
+      <div class="w-50 fl">
+        <h2 class="tc mb1">Odometer</h2>
+        <div class="relative">
+          <img class="relative" src="images/odometer-02.svg">
+          <p class="message pb1 pl4 code" id="odometerValue">150000</p>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+  window.onload = function() {
+
+    var width = function() {
+      return document.getElementById('container').offsetWidth;
+    }
+    var height = function() {
+      return document.getElementById('container').offsetHeight;
+    }
+
+    var offset = 20; // offset value so handles don't go to zero
+    var sY = 0.5; // scale along Y axis
+    var sX = 0.5; // scale along X axis
+
+    var odometerValue = {value: 150000};
+    var odometer = document.getElementById("odometerValue");
+
+    TweenMax.set('#circle', {scaleX: sX, scaleY: sY + .1}); // added .1 offset so it won't jump on initial move
+    TweenMax.set('#graph', {scaleX: 1.25, scaleY: 1.25, opacity: 0.5});
+
+    // position the handles on the top and side of the circle
+    TweenMax.set("#handle-top", {scale: 2, transformOrigin:"100% 100%"}); // used to reset object center
+    TweenMax.set('#handle-top', {x: width()/2, y: height()/4 - offset});
+    TweenMax.set("#handle-right", {scale: 2, transformOrigin:"100% 100%"});
+    TweenMax.set('#handle-right', {x: width()/4, y: height()/2});
+
+    var handleTop = Draggable.create("#handle-top", {
+      type:"y",
+      bounds:{minY:0, maxY:height()/2 - offset},
+      throwProps:true
+    })[0];
+
+    handleTop.addEventListener("drag",
+    () => {
+      sX = Math.abs(handleTop.y/handleTop.maxY);
+      sY = 1 - sX;
+      TweenMax.set('#circle', {scaleY: (sY + .1) * .9, scaleX: (sX + .1) * .9});
+      TweenMax.set('#handle-right', {x: width()/2 - handleTop.y - offset});
+    });
+
+    var handleRight = Draggable.create("#handle-right", {
+      type:"x",
+    	bounds:{minX:0, maxX:width()/2 - offset},
+    	throwProps:true
+    })[0];
+
+    handleRight.addEventListener("drag",
+    () => {
+      sY = Math.abs(handleRight.x/handleRight.maxX);
+      sX = 1 - sY;
+      TweenMax.set('#circle', {scaleY: (sY + .1) * .9, scaleX: (sX + .1) * .9});
+      TweenMax.set('#handle-top', {y: height()/2 - handleRight.x - offset});
+    });
+
+    function odometerTween() {
+      let newtl = new TimelineMax();
+      newtl.to(odometerValue, 1, {value: 150000 + ( Math.random() - 0.5 ) * 100000 * sX ** 4, roundProps:"value", onUpdate:updateHandler, ease:Linear.easeNone});
+    }
+
+    function arrowTween() {
+      let newtl = new TimelineMax();
+      newtl.to('#arrow', 1, {rotation: (Math.random() - 0.5) * 720 * sY ** 2, ease:Linear.easeNone});
+    }
+
+    function updateHandler() {
+      odometer.innerHTML = odometerValue.value;
+    }
+
+    function step() {
+      arrowTween();
+      odometerTween();
+      window.requestAnimationFrame(step);
+  }
+    window.requestAnimationFrame(step);
+
+    window.addEventListener('resize', function(event){
+      console.log(width())
+      TweenMax.set('#handle-right', {x: width()/2 - handleTop.y - offset});
+      TweenMax.set('#handle-top', {y: height()/2 - handleRight.x - offset});
+    });
+
+  }
+  </script>

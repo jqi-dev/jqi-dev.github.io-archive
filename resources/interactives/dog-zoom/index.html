@@ -1,0 +1,118 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/TweenMax.min.js"></script>
+    <script type='text/javascript' src="../../../resources/js/iframeResizer.contentWindow.js"></script>
+    <link rel="stylesheet" type="text/css" media="all" href="../../css/tachyons.css"/>
+    <style>
+      .p-none {
+        pointer-events: none;
+      }
+      .bg-lighter-gray {
+      background-color: rgba(250, 250, 250, 1)
+    }
+    </style>
+  </head>
+  <body>
+    <div class="w-100 mw7 center bg-lighter-gray moon-gray bb">
+      <div class="w-100 center sans-serif dark-gray overflow-hidden relative" id="container">
+        <div class="center w-100 z-2 bottom-0 absolute pa2 blue outline bg-lighter-gray dt">
+          <div class="f2 tc dtc label w-50 pr4 dim">
+            <div class="f2 pointer blue no-underline dim ph3 code pv2 mb2 dib fr tc outline shaded" href="#0" onclick="increment(-1)" id="buttonminus">-</div>
+          </div>
+          <div class="f2 tc dtc v-mid" id="label">1x</div>
+          <div class="f2 tc dtc label w-50 pl4 dim">
+            <div class="f2 pointer blue no-underline dim ph3 code pv2 mb2 dib fl tc outline shaded" href="#0" onclick="increment(1)" id="buttonplus">+</div>
+          </div>
+        </div>
+        <img src="images/hair.png" class="absolute w-100 z-1" id="hair">
+        <img src="images/bacteria.png" class="absolute w-100 z-1" id="bacteria">
+        <img src="images/atom.png" class="absolute w-100 z-1" id="atom">
+        <img src="images/glass.png" class="absolute w-100 z-3 p-none" id="glass">
+        <img src="images/glass.png" class="absolute w-100 z-3 p-none" id="glass-hidden">
+        <img src="images/dog.png" class="relative w-100" id="dog">
+      </div>
+    </div>
+  </body>
+
+  <script>
+
+  TweenMax.set("#bacteria", {opacity: 0});
+  TweenMax.set("#atom", {opacity: 0});
+  TweenMax.set("#hair", {opacity: 0});
+  TweenMax.set("#glass-hidden", {x: -getWidth()})
+
+  let state = 0;
+  let disabled = {on: false};
+  let tl = new TimelineMax();
+
+  const magnification = ["1x", "100,000x", "1,000,000x", "10,000,000,000x"]
+  const images = ["#hair", "#bacteria", "#atom"]
+
+  function getWidth() {
+    return document.getElementById("container").offsetWidth;
+  }
+
+  function increment(val) {
+    if (disabled.on) { return; } // break if click is disabled
+    state += val;
+    if (state < 0) {
+      state = 0;
+      return;
+    }
+    if (state>images.length) {
+      state = images.length;
+      return;
+    }
+    swapGlass(val);
+    buttonOpacity(state);
+    tweenState(state, val);
+    modifyLabel(state)
+  }
+
+  //
+  // There is definitely a better way to do this - right now just moving everything,
+  // even the invisible images.
+  //
+
+  function swapGlass(val) {
+    tl.set(disabled, {on: true}); // disable further clicks
+    tl.fromTo(images.concat("#glass"), 0.5, {x: 0}, {x: getWidth() * val}); // move everything to right or left
+    tl.set(images, {x: 0}); // reset position of images
+    tl.fromTo(["#glass-hidden"] , 0.5, {x: -getWidth() * val}, {x: 0}); // shift hidden magnifying glass over
+    tl.set(disabled, {on: false}); // re-enable clicks
+  }
+
+  function tweenState(state, val) {
+    tweenArray = [0,0,0,0] // reset array
+    tweenArray[state] = 1;
+    for (var i = 0; i < images.length; i++) {
+      TweenMax.to(images[i], 0.5, {opacity: tweenArray[i + 1], delay:tweenArray[i + 1]})
+    }
+  }
+
+  function buttonOpacity(state) {
+    let buttonminus = document.getElementById("buttonminus");
+    let buttonplus = document.getElementById("buttonplus");
+    buttonminus.style.opacity = 1.0;
+    buttonminus.style.cursor = "pointer";
+    buttonplus.style.opacity = 1.0;
+    buttonplus.style.cursor = "pointer";
+    console.log(state)
+    if (state == 0) {
+      buttonminus.style.opacity = 0.5;
+      buttonminus.style.cursor = "auto";
+    }
+    if (state == 3) {
+      buttonplus.style.opacity = 0.5;
+      buttonplus.style.cursor = "auto";
+    }
+  }
+
+  function modifyLabel(state) {
+    document.getElementById("label").innerHTML = magnification[state];
+  }
+
+  increment(0);
+
+  </script>
+</html>

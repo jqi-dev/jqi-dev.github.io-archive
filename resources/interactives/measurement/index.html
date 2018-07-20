@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Measurement</title>
+    <link rel="stylesheet" href="../tachyons.css">
+    <style>
+      #container {
+        height: 30rem;
+      }
+    </style>
+</head>
+<body class="sans-serif">
+
+    <div id="container" class="w-100"></div>
+
+    <script type='text/javascript' src="../../../resources/js/three.js"></script>
+    <script type='text/javascript' src="../../../resources/js/iframeResizer.contentWindow.js"></script>
+    <script type='text/javascript' src='../../../resources/js/jquery-3.2.1.min.js'></script>
+    <script src="randomColor.js"></script>
+
+    <script>
+
+        var scene, camera, cameraScale, renderer;
+        var w, h;
+        var frustum = new THREE.Frustum();
+        var cameraViewProjectionMatrix = new THREE.Matrix4();
+        var lights = [];
+        var spheres = [];
+
+        function init()
+        {
+
+            w = $('#container').outerWidth();
+            h = $('#container').outerHeight();
+
+            cameraScale = 200;
+            // regular scene creation
+            scene = new THREE.Scene();
+            camera = new THREE.OrthographicCamera(w / - cameraScale, w / cameraScale, h / cameraScale, h / - cameraScale, 0, 100 );
+            camera.position.set( 3,0,0 );
+            camera.lookAt(scene.position);
+
+            // renderer creation
+            renderer = new THREE.WebGLRenderer( { alpha: true, antialias: true } );
+            renderer.setClearColor (0x004d80, 1);
+            renderer.setSize( w,h );
+            document.getElementById("container").append( renderer.domElement );
+
+            // add spheres
+            let numSpheres = 80;
+            for(i=0; i<numSpheres; i++) {
+                new MovingSphere();
+            }
+
+            // scene lighting
+            lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+            lights[0].castShadow = true;
+            lights[ 0 ].position.set( 0, 20, 0 );
+            lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+            lights[ 1 ].position.set( 30, -10, 0 );
+            lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+            lights[ 2 ].position.set( -10, 0, 10);
+            lights[ 3 ] = new THREE.AmbientLight( 0x404040 );
+
+            lights.forEach(function(light) {
+              scene.add(light)
+            })
+
+            // GO !
+            window.addEventListener( "resize", onResize );
+            window.addEventListener( "mousedown", onMouseDown );
+            window.addEventListener( "mouseup", onMouseUp );
+            onResize();
+            update();
+
+        }
+
+        function MovingSphere() {
+          // scaling controls
+          this.scalePhase = getRand(0, 2 * Math.PI);
+          this.scaleRate = getRand(0.5, 1);
+          // position target
+          this.target = false;
+          this.targetDistance = 0.0;
+          // initial velocity
+          this.vz = getRand(-0.01, 0.01);
+          this.vy = getRand(-0.01, 0.01);
+          // create a sphere
+          let geometry = new THREE.SphereGeometry(0.5, 32, 32 );
+          let material = new THREE.MeshLambertMaterial( {
+            color: randomColor({ hue: 'blue' }),
+            opacity: 0.75,
+            blending: THREE.NormalBlending,
+            depthWrite: false
+          });
+          material.transparent = true;
+          this.sphere = new THREE.Mesh( geometry, material );
+          this.sphere.position.set(
+            getRand(-0.1,0.1),
+            getRand(-h/(cameraScale), h/(cameraScale)),
+            getRand(-w/(cameraScale), w/(cameraScale)));
+          spheres.push(this);
+          scene.add(this.sphere);
+        }
+
+        function getRand(min, max) {
+          // generates a random number within a given range
+          return Math.random() * (max - min) + min;
+        }
+
+
+        function onResize(e) {
+          // recalculate renderer size and orthographic camera bounds
+          w = window.innerWidth;
+          h = window.innerHeight;
+          renderer.setSize(w,h);
+          camera.left = -w / cameraScale;
+          camera.right = w/ cameraScale;
+          camera.top = h / cameraScale;
+          camera.bottom = -h / cameraScale;
+          camera.updateProjectionMatrix();
+        }
+
+        function onMouseDown(event) {
+          // set target for each sphere to mouse location and disable depth writing
+          event.preventDefault();
+          let x = event.clientX;
+          let y = event.clientY;
+          let zpos = -(x/w - 0.5) * 2 * w/(cameraScale);
+          let ypos = -(y/h - 0.5) * 2 * h/(cameraScale);
+          spheres.forEach(function(movingsphere) {
+            movingsphere.target = [0, ypos, zpos];
+            movingsphere.targetDistance = 0.0;
+            movingsphere.vz = 0.0;
+            movingsphere.vy = 0.0;
+            movingsphere.sphere.material.depthWrite = true;
+          });
+        }
+
+        function onMouseUp(event) {
+          // set random target for each sphere and enable depth writing
+          event.preventDefault();
+          spheres.forEach(function(movingsphere) {
+            movingsphere.target = [
+              getRand(-0.1,0.1),
+              getRand(-h/cameraScale, h/cameraScale),
+              getRand(-w/cameraScale, w/cameraScale)];
+            movingsphere.targetDistance = 0.5;
+            movingsphere.vz = getRand(-0.01, 0.01);
+            movingsphere.vy = getRand(-0.01, 0.01);
+            movingsphere.sphere.material.depthWrite = false;
+          });
+        }
+
+        //update loop
+        function update()
+        {
+            // going to use the camera frustrum to check if sphere is off-screen
+            camera.updateMatrixWorld(); // make sure the camera matrix is updated
+            camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+            cameraViewProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
+            frustum.setFromMatrix( cameraViewProjectionMatrix );
+            // frustum is now ready to check all the spheres
+
+            requestAnimationFrame(update);
+
+            spheres.forEach(function(movingsphere) {
+              // if sphere has a target, do distance calculations
+              if (movingsphere.target) {
+                let easingAmount = 0.08;
+                var xDistance = movingsphere.target[0] - movingsphere.sphere.position.x;
+                var yDistance = movingsphere.target[1] - movingsphere.sphere.position.y;
+                var zDistance = movingsphere.target[2] - movingsphere.sphere.position.z;
+                var distance = Math.sqrt(zDistance * zDistance + yDistance * yDistance + xDistance * xDistance);
+                // if still out of target distance, move to target
+                if (distance > movingsphere.targetDistance) {
+                     movingsphere.sphere.position.z += zDistance * easingAmount;
+                     movingsphere.sphere.position.y += yDistance * easingAmount;
+                     movingsphere.sphere.position.x += xDistance * easingAmount;
+                }
+                // if within target distance, remove sphere target
+                else {
+                  movingsphere.target = false;
+                }
+              }
+
+              else {
+                // change sphere size over time
+                let date = Date.now() * movingsphere.scaleRate * 0.001;
+                let scale = Math.sin(date + movingsphere.scalePhase) * .005;
+                movingsphere.sphere.scale.x += scale;
+                movingsphere.sphere.scale.y += scale;
+                movingsphere.sphere.scale.z += scale;
+
+                // move sphere based on y and z velocity
+                movingsphere.sphere.position.y += movingsphere.vy;
+                movingsphere.sphere.position.z += movingsphere.vz;
+              }
+
+              // if sphere is off-screen, flip the y and z position
+              if( !(frustum.intersectsObject( movingsphere.sphere )) ) {
+                movingsphere.sphere.position.set(
+                  movingsphere.sphere.position.x,
+                  -movingsphere.sphere.position.y * 0.999,
+                  -movingsphere.sphere.position.z * 0.999);
+              }
+
+            });
+
+            //render the spheres at the new location
+            renderer.render( scene, camera );
+
+        }
+
+        init();
+
+    </script>
+
+</body>
+</html>

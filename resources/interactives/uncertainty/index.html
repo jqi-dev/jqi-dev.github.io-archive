@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/TweenMax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/utils/Draggable.min.js"></script>
+    <script src="script.js"></script>
+    <link rel="stylesheet" type="text/css" media="all" href="tachyons.css"/>
+    <style>
+
+    .message {
+      font-size: 2rem;
+      letter-spacing: 1.85rem;
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-right: -50%;
+      transform: translate(-50%, -50%);
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+
+    </style>
+  </head>
+  <body>
+    <div class="w-100 mw8 center mt6 sans-serif dark-gray">
+      <div class="relative w-33 fl">
+        <h2 class="tc mb4">Speedometer</h2>
+        <img class="absolute" src="speedometer-01.svg">
+        <img class="absolute" id="arrow" src="arrow-01.svg">
+      </div>
+      <div class="relative w-33 fl">
+        <h2 class="tc mb4">Uncertainty</h2>
+        <img class="absolute" src="graph-03.svg">
+        <img class="absolute" id="circle" src="circle-03.svg">
+      </div>
+      <div class="w-33 fl">
+        <h2 class="tc mb4">Odometer</h2>
+        <div class="relative">
+          <img class="relative" src="odometer-02.svg">
+          <p class="message pb1 pl4 code" id="odometerValue">150000</p>
+        </div>
+      </div>
+    </div>
+  </body>
