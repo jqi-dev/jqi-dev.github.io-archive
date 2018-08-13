@@ -1,4 +1,5 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>The Quantum Atlas</title><meta name="viewport" content="width=device-width,initial-scale=1"><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script><link href="https://fonts.googleapis.com/css?family=Lora" rel="stylesheet"><link rel="stylesheet" href="https://unpkg.com/tachyons@4.9.1/css/tachyons.min.css"><style>/* His new additions  */
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>The Quantum Atlas</title><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css?family=Lora" rel="stylesheet"><link rel="stylesheet" href="https://unpkg.com/tachyons@4.9.1/css/tachyons.min.css"><style>/* His new additions  */
+
     html {
       line-height: htm 1.15;
     }
@@ -177,10 +178,10 @@
     // When the single page app is loaded further down in this file,
     // the correct url will be waiting in the browser's history for
     // the single page app to route accordingly.
-    (function(l) {
+    (function (l) {
       if (l.search) {
         var q = {};
-        l.search.slice(1).split('&').forEach(function(v) {
+        l.search.slice(1).split('&').forEach(function (v) {
           var a = v.split('=');
           q[a[0]] = a.slice(1).join('=').replace(/~and~/g, '&');
         });
@@ -192,4 +193,8 @@
           );
         }
       }
-    }(window.location))</script><script type="text/javascript" src="/vendors~babel.js"></script><script type="text/javascript" src="/babel.js"></script><script type="text/javascript" src="/vendors~app.js"></script><script type="text/javascript" src="/app.js"></script></body></html>
+    }(window.location))</script><script>if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js');
+      });
+    }</script><script type="text/javascript" src="/vendors~babel.js"></script><script type="text/javascript" src="/babel.js"></script><script type="text/javascript" src="/vendors~app.js"></script><script type="text/javascript" src="/app.js"></script></body></html>
